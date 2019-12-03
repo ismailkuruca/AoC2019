@@ -64,7 +64,7 @@ public class Day3 {
                 case 'R':
                     for (int i = 1; i <= distance; ++i) {
                         point = point.right();
-                        points.add(right(point));
+                        points.add(point);
                     }
                     break;
 
@@ -97,47 +97,31 @@ public class Day3 {
             switch (direction) {
                 case 'L':
                     for (int i = 1; i <= distance; ++i) {
-                        point = left(point);
+                        point = point.left();
                         points.put(point, ++moves);
                     }
                     break;
                 case 'R':
                     for (int i = 1; i <= distance; ++i) {
-                        point = right(point);
+                        point = point.right();
                         points.put(point, ++moves);
                     }
                     break;
                 case 'U':
                     for (int i = 1; i <= distance; ++i) {
-                        point = up(point);
+                        point = point.up();
                         points.put(point, ++moves);
                     }
                     break;
                 case 'D':
                     for (int i = 1; i <= distance; ++i) {
-                        point = down(point);
+                        point = point.down();
                         points.put(point, ++moves);
                     }
                     break;
             }
         }
         return points;
-    }
-
-    private static Point right(Point p) {
-        return new Point(p.x + 1, p.y);
-    }
-
-    private static Point left(Point p) {
-        return new Point(p.x - 1, p.y);
-    }
-
-    private static Point up(Point p) {
-        return new Point(p.x, p.y + 1);
-    }
-
-    private static Point down(Point p) {
-        return new Point(p.x, p.y - 1);
     }
 
 }
