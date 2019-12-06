@@ -3,6 +3,7 @@ package com.ismailkuruca.aoc_2019;
 import com.ismailkuruca.aoc_2019.util.FileUtil;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.AllDirectedPaths;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
@@ -29,12 +30,23 @@ public class Day6 {
                 directedGraph.addVertex(orbit[1]);
             }
             directedGraph.addEdge(orbit[0], orbit[1]);
+
+            //for part2
+//            directedGraph.addEdge(orbit[1], orbit[0]);
             nodes.add(orbit[0]);
             nodes.add(orbit[1]);
         });
         nodes.remove("COM");
 
         part1(directedGraph, nodes);
+        part2(directedGraph);
+    }
+
+    private static void part2(DefaultDirectedGraph<String, DefaultEdge> directedGraph) {
+        final DijkstraShortestPath<String, DefaultEdge> di = new DijkstraShortestPath<>(directedGraph);
+        final double allPaths = di.getPathWeight("SAN", "YOU");
+
+        System.out.println(allPaths - 2);
     }
 
     private static void part1(DefaultDirectedGraph<String, DefaultEdge> directedGraph, HashSet<String> nodes) {
