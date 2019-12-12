@@ -1,173 +1,114 @@
 package com.ismailkuruca.aoc_2019;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.lang.Integer.compare;
 import static java.util.Arrays.asList;
 import static org.apache.commons.math3.util.ArithmeticUtils.lcm;
 
 public class Day12 {
 
+    private static final Moon MOON_1 = new Moon(0, 4, 0, 0, 0, 0);
+    private static final Moon MOON_2 = new Moon(-10, -6, -14, 0, 0, 0);
+    private static final Moon MOON_3 = new Moon(9, -16, -3, 0, 0, 0);
+    private static final Moon MOON_4 = new Moon(6, -1, 2, 0, 0, 0);
+
+    private static List<Moon> moonsForPart1 = asList(new Moon(MOON_1), new Moon(MOON_2), new Moon(MOON_3), new Moon(MOON_4));
+    private static List<Moon> moonsForPart2 = asList(new Moon(MOON_1), new Moon(MOON_2), new Moon(MOON_3), new Moon(MOON_4));
+
     public static void main(String[] args) {
+        part1(moonsForPart1);
+        part2(moonsForPart2);
+    }
 
-//<x = 0, y = 4, z = 0 >
-//<x = -10, y = -6, z = -14 >
-//<x = 9, y = -16, z = -3 >
-//<x = 6, y = -1, z = 2 >
+    private static void part1(List<Moon> moons) {
+        for (int i = 0; i < 1000; i++) {
+            iterate(moons);
+        }
+        int en = 0;
+        for (Moon moon : moons) {
+            int pot = Math.abs(moon.x) + Math.abs(moon.y) + Math.abs(moon.z);
+            int kin = Math.abs(moon.vx) + Math.abs(moon.vy) + Math.abs(moon.vz);
+            en += pot * kin;
+        }
+        System.out.println("Part1: " + en);
+    }
 
-        final Moon moon1 = new Moon(0, 4, 0, 0, 0, 0);
-        final Moon moon2 = new Moon(-10, -6, -14, 0, 0, 0);
-        final Moon moon3 = new Moon(9, -16, -3, 0, 0, 0);
-        final Moon moon4 = new Moon(6, -1, 2, 0, 0, 0);
+    private static void part2(List<Moon> moons) {
+        final List<Moon> initial = asList(new Moon(MOON_1), new Moon(MOON_2), new Moon(MOON_3), new Moon(MOON_4));
+        final List<Integer> X = initial.stream().map(moon -> moon.x).collect(Collectors.toList());
+        final List<Integer> Y = initial.stream().map(moon -> moon.y).collect(Collectors.toList());
+        final List<Integer> Z = initial.stream().map(moon -> moon.z).collect(Collectors.toList());
 
-//        final Moon moon1 = new Moon(-1, 0, 2, 0, 0, 0);
-//        final Moon moon2 = new Moon(2, -10, -7, 0, 0, 0);
-//        final Moon moon3 = new Moon(4, -8, 8, 0, 0, 0);
-//        final Moon moon4 = new Moon(3, 5, -1, 0, 0, 0);
+        boolean periodicX = false, periodicY = false, periodicZ = false;
+        long periodX = 1, periodY = 1, periodZ = 1;
 
-//        final Moon moon1 = new Moon(-8, -10, 0, 0, 0, 0);
-//        final Moon moon2 = new Moon(5, 5, 10, 0, 0, 0);
-//        final Moon moon3 = new Moon(2, -7, 3, 0, 0, 0);
-//        final Moon moon4 = new Moon(9, -8, -3, 0, 0, 0);
-
-        List<Moon> moons = asList(moon1, moon2, moon3, moon4);
-
-        final List<Integer> X = moons.stream()
-                .map(moon -> moon.x)
-                .collect(Collectors.toList());
-        final List<Integer> Y = moons.stream()
-                .map(moon -> moon.y)
-                .collect(Collectors.toList());
-        final List<Integer> Z = moons.stream()
-                .map(moon -> moon.z)
-                .collect(Collectors.toList());
-
-        boolean perx = false, pery = false, perz = false;
-        long px = 1, py = 1, pz = 1;
-
-        long step = 0;
         while (true) {
-            round(moons);
+            iterate(moons);
 
-            if (X.equals(moons.stream()
-                    .map(moon -> moon.x)
-                    .collect(Collectors.toList()))) {
-                perx = true;
-            }
+            periodX += periodicX ? 0 : 1;
+            periodY += periodicY ? 0 : 1;
+            periodZ += periodicZ ? 0 : 1;
 
-            if (Y.equals(moons.stream()
-                    .map(moon -> moon.y)
-                    .collect(Collectors.toList()))) {
-                pery = true;
-            }
+            periodicX = X.equals(moons.stream().map(moon -> moon.x).collect(Collectors.toList())) || periodicX;
+            periodicY = Y.equals(moons.stream().map(moon -> moon.y).collect(Collectors.toList())) || periodicY;
+            periodicZ = Z.equals(moons.stream().map(moon -> moon.z).collect(Collectors.toList())) || periodicZ;
 
-            if (Z.equals(moons.stream()
-                    .map(moon -> moon.z)
-                    .collect(Collectors.toList()))) {
-                perz = true;
-                System.out.println(Z);
-            }
-            px += perx ? 0 : 1;
-            py += pery ? 0 : 1;
-            pz += perz ? 0 : 1;
-
-            if (perx && pery && perz) {
-                System.err.println(px + " " + py + " " + pz) ;
-                System.out.println(lcm(px + 1, lcm(py + 1, pz + 1)));
+            if (periodicX && periodicY && periodicZ) {
+                System.out.println("Part2: " + lcm(periodX, lcm(periodY, periodZ)));
                 break;
             }
         }
-
-        System.out.println(step);
-
-        int en = 0;
-        for (Moon moon : moons) {
-            System.out.println(moon);
-            int pot = Math.abs(moon.x) + Math.abs(moon.y) + Math.abs(moon.z);
-            int kin = Math.abs(moon.vx) + Math.abs(moon.vy) + Math.abs(moon.vz);
-            System.out.println(pot + " " + kin);
-            en += pot * kin;
-        }
-        System.out.println(en);
     }
 
-
-    private static List<Moon> round(List<Moon> moons) {
-        final List<Moon> temps = new ArrayList<>(moons);
+    private static void iterate(List<Moon> moons) {
         for (int m = 0; m < moons.size(); m++) {
-            final Moon moonP = moons.get(m);
-            final Moon tempP = temps.get(m);
+            final Moon moon1 = moons.get(m);
             for (int n = m; n < moons.size(); n++) {
                 if (m != n) {
-                    final Moon moonsS = moons.get(n);
-                    final Moon tempS = temps.get(n);
-                    if (moonP.x > moonsS.x) {
-                        tempP.vx -= 1;
-                        tempS.vx += 1;
-                    } else if (moonP.x < moonsS.x) {
-                        tempP.vx += 1;
-                        tempS.vx -= 1;
-                    }
-                    if (moonP.y > moonsS.y) {
-                        tempP.vy -= 1;
-                        tempS.vy += 1;
-                    } else if (moonP.y < moonsS.y) {
-                        tempP.vy += 1;
-                        tempS.vy -= 1;
-                    }
-                    if (moonP.z > moonsS.z) {
-                        tempP.vz -= 1;
-                        tempS.vz += 1;
-                    } else if (moonP.z < moonsS.z) {
-                        tempP.vz += 1;
-                        tempS.vz -= 1;
-                    }
+                    final Moon moon2 = moons.get(n);
+                    moon1.vx -= compare(moon1.x, moon2.x);
+                    moon1.vy -= compare(moon1.y, moon2.y);
+                    moon1.vz -= compare(moon1.z, moon2.z);
+
+                    moon2.vx += compare(moon1.x, moon2.x);
+                    moon2.vy += compare(moon1.y, moon2.y);
+                    moon2.vz += compare(moon1.z, moon2.z);
                 }
             }
 
         }
-
-        for (Moon moon : temps) {
+        for (Moon moon : moons) {
             moon.x += moon.vx;
             moon.y += moon.vy;
             moon.z += moon.vz;
         }
-
-        return temps;
     }
 }
 
 
 class Moon {
-    @Override
-    public String toString() {
-        return "Moon{" +
-                "x=" + x +
-                ", y=" + y +
-                ", z=" + z +
-                ", vx=" + vx +
-                ", vy=" + vy +
-                ", vz=" + vz +
-                '}' ;
-    }
-
-    public Moon(Moon m) {
-        this.x = m.x;
-        this.y = m.y;
-        this.z = m.z;
-        this.vx = m.vx;
-        this.vz = m.vz;
-        this.vy = m.vy;
-    }
-
     int x;
     int y;
     int z;
     int vx;
     int vy;
     int vz;
+
+    Moon(Moon m) {
+        this(m.x, m.y, m.z, m.vx, m.vy, m.vz);
+    }
+
+    Moon(int x, int y, int z, int vx, int vy, int vz) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.vx = vx;
+        this.vy = vy;
+        this.vz = vz;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -187,46 +128,5 @@ class Moon {
         return Objects.hash(x, y, z, vx, vy, vz);
     }
 
-    public Moon(int x, int y, int z, int vx, int vy, int vz) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.vx = vx;
-        this.vy = vy;
-        this.vz = vz;
 
-
-    }
-
-
-}
-
-class Hash {
-    int i1;
-    int i2;
-    int i3;
-    int i4;
-
-    public Hash(List<Moon> moons) {
-        i1 = moons.get(0).hashCode();
-        i2 = moons.get(1).hashCode();
-        i3 = moons.get(2).hashCode();
-        i4 = moons.get(3).hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Hash hash = (Hash) o;
-        return i1 == hash.i1 &&
-                i2 == hash.i2 &&
-                i3 == hash.i3 &&
-                i4 == hash.i4;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(i1, i2, i3, i4);
-    }
 }
