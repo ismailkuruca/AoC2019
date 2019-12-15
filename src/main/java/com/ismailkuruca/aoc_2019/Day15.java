@@ -31,7 +31,8 @@ public class Day15 {
         int y = 25;
         intCodeMachine15.input = 1L;
         plane[25][25] = '.' ;
-        System.out.println();
+        Set<String> coords = new HashSet<>();
+        coords.add("2525");
         boolean loop = true;
         DefaultDirectedGraph<String, DefaultEdge> directedGraph
                 = new DefaultDirectedGraph<>(DefaultEdge.class);
@@ -49,14 +50,17 @@ public class Day15 {
                     plane[x + values[0]][y + values[1]] = '.' ;
                     x += values[0];
                     y += values[1];
-                    if (!directedGraph.containsVertex(x + "" + y))
+                    if (!directedGraph.containsVertex(x + "" + y)) {
                         directedGraph.addVertex(x + "" + y);
+                        coords.add(x + "" + y);
+                    }
                     directedGraph.addEdge(x + "" + y, (x - values[0]) + "" + (y - values[1]));
                     break;
                 }
                 case 2: {
                     plane[x + values[0]][y + values[1]] = 'D' ;
                     directedGraph.addVertex("D");
+                    coords.add("D");
                     directedGraph.addEdge((x - values[0]) + "" + (y - values[1]), "D");
                     loop = false;
                     break;
@@ -67,6 +71,25 @@ public class Day15 {
         }
         print(plane);
 
+        part1(directedGraph);
+        part2(directedGraph, coords);
+    }
+
+    private static void part2(DefaultDirectedGraph<String, DefaultEdge> directedGraph, Set<String> coords) {
+        final DijkstraShortestPath<String, DefaultEdge> di = new DijkstraShortestPath<>(directedGraph);
+
+        double maxWeight = 0;
+        for (String coord : coords) {
+            final double weight = di.getPathWeight(coord, "D");
+            if (weight > maxWeight) {
+                maxWeight = weight;
+            }
+        }
+
+        System.out.println(maxWeight + 1);
+    }
+
+    private static void part1(DefaultDirectedGraph<String, DefaultEdge> directedGraph) {
         final DijkstraShortestPath<String, DefaultEdge> di = new DijkstraShortestPath<>(directedGraph);
         final double allPaths = di.getPathWeight("2525", "D");
 
