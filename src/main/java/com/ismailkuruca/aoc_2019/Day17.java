@@ -39,18 +39,18 @@ public class Day17 {
         //C
         //R6, R6, L8, L10
         //A,A,B,C,B,C,B,C,B,A
-        char[] A = {'L', '1', '0', ',', 'L', '8', ',', 'R', '8', ',', 'L', '8', ',', 'R', '6', 10};
-        char[] B = {'R', '6', ',', 'R', '8', ',', 'R', '8', 10};
-        char[] C = {'R', '6', ',', 'R', '6', ',', 'L', '8', ',', 'L', '1', '0', 10};
-        char[] M = {'A', ',', 'A', ',', 'B', ',', 'C', ',', 'B', ',', 'C', ',', 'B', ',', 'C', ',', 'B', ',', 'A', 10};
-        char[] P = {'n', 10};
+        final String A = "L,10,L,8,R,8,L,8,R,6\n";
+        final String B = "R,6,R,8,R,8\n";
+        final String C = "R,6,R,6,L,8,L,10\n";
+        final String M = "A,A,B,C,B,C,B,C,B,A\n";
+        final String P = "n\n";
 
         List<Long> code = new ArrayList<>();
-        code.addAll(new String(M).chars().mapToObj(Long::new).collect(Collectors.toList()));
-        code.addAll(new String(A).chars().mapToObj(Long::new).collect(Collectors.toList()));
-        code.addAll(new String(B).chars().mapToObj(Long::new).collect(Collectors.toList()));
-        code.addAll(new String(C).chars().mapToObj(Long::new).collect(Collectors.toList()));
-        code.addAll(new String(P).chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(M.chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(A.chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(B.chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(C.chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(P.chars().mapToObj(Long::new).collect(Collectors.toList()));
 
         intCodeMachine17.input = code;
         intCodeMachine17.writeToMem(0, 2, 1);
