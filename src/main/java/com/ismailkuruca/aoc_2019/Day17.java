@@ -9,9 +9,12 @@ public class Day17 {
 
     //L10, L8, R8, L8, R6,
     //L10, L8, R8, L8, R6,
-    //R6, R8, R8, R6, R6, L8, L10
-    //R6, R8, R8, R6, R6, L8, L10
-    //R6, R8, R8, R6, R6, L8, L10
+    //R6, R8, R8,
+    //R6, R6, L8, L10
+    //R6, R8, R8,
+    //R6, R6, L8, L10
+    //R6, R8, R8,
+    //R6, R6, L8, L10
     //R6, R8, R8,
     //L10, L8, R8, L8, R6
     public static void main(String[] args) {
@@ -20,15 +23,39 @@ public class Day17 {
     }
 
     private static void part2() {
-        //A
-        //L10, L8, R8, L8, R6
-        //B
-        //R6, R8, R8, R6, R6, L8, L10
-        //C
-        //R6, R8, R8
-        //A,A,B,B,B,C,B
+        final List<String> day17 =
+                FileUtil.readFile("day17");
+        final List<String> day17Values = Arrays.asList(day17.get(0).split(","));
 
-//        char[] A = {'L', 10, }
+        final List<Long> input = day17Values.stream()
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+
+        final IntCodeMachine17 intCodeMachine17 = new IntCodeMachine17(input);
+        //A
+        //L10, L8, R8, L8, R6,
+        //B
+        //R6, R8, R8,
+        //C
+        //R6, R6, L8, L10
+        //A,A,B,C,B,C,B,C,B,A
+        char[] A = {'L', '1', '0', ',', 'L', '8', ',', 'R', '8', ',', 'L', '8', ',', 'R', '6', 10};
+        char[] B = {'R', '6', ',', 'R', '8', ',', 'R', '8', 10};
+        char[] C = {'R', '6', ',', 'R', '6', ',', 'L', '8', ',', 'L', '1', '0', 10};
+        char[] M = {'A', ',', 'A', ',', 'B', ',', 'C', ',', 'B', ',', 'C', ',', 'B', ',', 'C', ',', 'B', ',', 'A', 10};
+        char[] P = {'n', 10};
+
+        List<Long> code = new ArrayList<>();
+        code.addAll(new String(M).chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(new String(A).chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(new String(B).chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(new String(C).chars().mapToObj(Long::new).collect(Collectors.toList()));
+        code.addAll(new String(P).chars().mapToObj(Long::new).collect(Collectors.toList()));
+
+        intCodeMachine17.input = code;
+        intCodeMachine17.writeToMem(0, 2, 1);
+        final List<Long> run = intCodeMachine17.run();
+        System.err.println(run.get(run.size() - 1));
     }
 
     private static void part1() {
@@ -73,7 +100,7 @@ public class Day17 {
 
 //34 11, 34 31, 38 17
 class IntCodeMachine17 {
-    public Long input;
+    public List<Long> input;
     public List<Long> output = new ArrayList<>();
     Map<Long, Long> program = new HashMap<>();
     long pc = 0;
@@ -102,7 +129,8 @@ class IntCodeMachine17 {
                 writeToMem(pc + 3, firstOperand * secondOperand, getNthDigit(operation, 5));
                 pc += 4;
             } else if (opcode == 3) {
-                writeToMem(pc + 1, input, getNthDigit(operation, 3));
+                writeToMem(pc + 1, input.get(0), getNthDigit(operation, 3));
+                input.remove(0);
                 pc += 2;
             } else if (opcode == 4) {
                 final long firstOperand = readFromMem(1, getNthDigit(operation, 3));
