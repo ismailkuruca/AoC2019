@@ -1,190 +1,219 @@
 package com.ismailkuruca.aoc_2019;
 
+import com.ismailkuruca.aoc_2019.util.FileUtil;
 import org.jgrapht.GraphPath;
+import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DefaultDirectedWeightedGraph;
+import org.jgrapht.graph.DefaultWeightedEdge;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Day18 {
-    static DijkstraShortestPath<String, DefaultEdge> di;
+    static List<String> knownKeys;
 
-    public static void main(String[] args) {
-        String input = "########################\n" +
-                "#...............b.C.D.f#\n" +
-                "#.######################\n" +
-                "#.....@.a.B.c.d.A.e.F.g#\n" +
-                "########################";
-        List<String> day18 = Arrays.asList(input.split("\\n"));
+    static List<String> day18;
 
-        DefaultDirectedGraph<String, DefaultEdge> directedGraph
-                = new DefaultDirectedGraph<>(DefaultEdge.class);
+    public static void main(String[] args) throws IOException {
+
+        day18 = FileUtil.readFile("day18");
+        knownKeys = new ArrayList<>(Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+                "k", "l", "m", "n", "o", "p", "r", "s", "t", "u",
+                "v", "w", "x", "y", "z", "q"));
+
+
+        loop(graph(day18), new HashSet<>(), "40,40,@", 0.0, 0);
+
+    }
+
+    static double min = Integer.MAX_VALUE;
+    static int count = 0;
+
+    static void loop(DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph, Set<String> inventory, String start, double weight, int depth) {
+        count++;
+        if (count % 1000000 == 0) {
+            System.err.println(count);
+        }
+        if (weight > min) {
+            return;
+        }
+        if (inventory.size() == 26) {
+            if (weight < min) {
+                min = weight;
+            }
+            System.out.println(weight);
+            return;
+        }
+        final Set<String> vertices = graph.vertexSet();
+        DijkstraShortestPath<String, DefaultWeightedEdge> di = new DijkstraShortestPath<>(graph);
+        for (String knownKey : knownKeys) {
+            if (inventory.contains(knownKey)) {
+                continue;
+            }
+            final String vertex = findVertex(vertices, knownKey.charAt(0));
+            final GraphPath<String, DefaultWeightedEdge> path = getPath(di, start, vertex);
+            if (path != null) {
+                boolean broken = false;
+                List<String> tempKeys = new ArrayList<>();
+                for (String ver : path.getVertexList()) {
+                    final char c = ver.charAt(ver.length() - 1);
+                    if (Character.isUpperCase(c)) {
+                        if (!inventory.contains(Character.toLowerCase(c) + "")) {
+                            broken = true;
+                            break;
+                        }
+                    } else if (Character.isLowerCase(c)) {
+                        inventory.add(c + "");
+                        tempKeys.add(c + "");
+                    }
+                }
+                if (broken) {
+                    tempKeys.forEach(inventory::remove);
+                    continue;
+                }
+                weight += path.getWeight();
+                if (weight > min) {
+                    return;
+                }
+                final Set<String> newInventory = new HashSet<>(inventory);
+                newInventory.add(knownKey);
+//                System.out.println(depth + " " + String.join("", newInventory) + " now: " + start + " next: " + vertex + " " + weight);
+                if (depth == 26 || newInventory.size() == inventory.size()) return;
+                loop(graph, newInventory, vertex, weight, depth + 1);
+            }
+        }
+        if (inventory.size() == 26)
+            System.out.println(depth + " " + inventory + " " + weight);
+    }
+
+    static Map<String, ShortestPathAlgorithm.SingleSourcePaths<String, DefaultWeightedEdge>> CACHE = new HashMap<>();
+
+    private static GraphPath<String, DefaultWeightedEdge> getPath(DijkstraShortestPath<String, DefaultWeightedEdge> di, String start, String vertex) {
+        if (!CACHE.containsKey(start)) {
+            final ShortestPathAlgorithm.SingleSourcePaths<String, DefaultWeightedEdge> path = di.getPaths(start);
+            CACHE.put(start, path);
+        }
+        return CACHE.get(start).getPath(vertex);
+    }
+
+    private static DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph(List<String> day18) {
+        DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> directedGraph
+                = new DefaultDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
         for (int i = 0; i < day18.size(); i++) {
             final String s = day18.get(i);
             final char[] chars = s.toCharArray();
             for (int j = 0; j < chars.length; j++) {
                 if (chars[j] != '#') {
-                    if (!directedGraph.containsVertex(i + "" + j + "" + chars[j])) {
-                        directedGraph.addVertex(i + "" + j + "" + chars[j]);
+                    if (!directedGraph.containsVertex(i + "," + j + "," + chars[j])) {
+                        directedGraph.addVertex(i + "," + j + "," + chars[j]);
                     }
                     if (j > 0 && chars[j - 1] != '#') {
-                        if (!directedGraph.containsVertex(i + "" + (j - 1) + "" + chars[j - 1])) {
-                            directedGraph.addVertex(i + "" + (j - 1) + "" + chars[j - 1]);
+                        if (!directedGraph.containsVertex(i + "," + (j - 1) + "," + chars[j - 1])) {
+                            directedGraph.addVertex(i + "," + (j - 1) + "," + chars[j - 1]);
                         }
-                        directedGraph.addEdge(i + "" + j + "" + chars[j], i + "" + (j - 1) + "" + chars[j - 1]);
+                        final DefaultWeightedEdge defaultWeightedEdge = directedGraph.addEdge(i + "," + j + "," + chars[j], i + "," + (j - 1) + "," + chars[j - 1]);
+//                        final DefaultWeightedEdge defaultWeightedEdge1 = directedGraph.addEdge(i + "," + (j - 1) + "," + chars[j - 1], i + "," + j + "," + chars[j]);
+//                        directedGraph.setEdgeWeight(defaultWeightedEdge, 1);
+//                        directedGraph.setEdgeWeight(defaultWeightedEdge1, 1);
                     }
                     if (j < chars.length - 1 && chars[j + 1] != '#') {
-                        if (!directedGraph.containsVertex(i + "" + (j + 1) + "" + chars[j + 1])) {
-                            directedGraph.addVertex(i + "" + (j + 1) + "" + chars[j + 1]);
+                        if (!directedGraph.containsVertex(i + "," + (j + 1) + "," + chars[j + 1])) {
+                            directedGraph.addVertex(i + "," + (j + 1) + "," + chars[j + 1]);
                         }
-                        directedGraph.addEdge(i + "" + j + "" + chars[j], i + "" + (j + 1) + "" + chars[j + 1]);
+                        final DefaultWeightedEdge defaultWeightedEdge = directedGraph.addEdge(i + "," + j + "," + chars[j], i + "," + (j + 1) + "," + chars[j + 1]);
+//                        final DefaultWeightedEdge defaultWeightedEdge1 = directedGraph.addEdge(i + "," + (j + 1) + "," + chars[j + 1], i + "," + j + "," + chars[j]);
+//                        directedGraph.setEdgeWeight(defaultWeightedEdge, 1);
+//                        directedGraph.setEdgeWeight(defaultWeightedEdge1, 1);
                     }
                     if (i > 0 && day18.get(i - 1).toCharArray()[j] != '#') {
-                        if (!directedGraph.containsVertex((i - 1) + "" + j + "" + day18.get(i - 1).toCharArray()[j])) {
-                            directedGraph.addVertex((i - 1) + "" + j + "" + day18.get(i - 1).toCharArray()[j]);
+                        if (!directedGraph.containsVertex((i - 1) + "," + j + "," + day18.get(i - 1).toCharArray()[j])) {
+                            directedGraph.addVertex((i - 1) + "," + j + "," + day18.get(i - 1).toCharArray()[j]);
                         }
-                        directedGraph.addEdge(i + "" + j + "" + chars[j], (i - 1) + "" + j + "" + day18.get(i - 1).toCharArray()[j]);
+                        final DefaultWeightedEdge defaultWeightedEdge = directedGraph.addEdge(i + "," + j + "," + chars[j], (i - 1) + "," + j + "," + day18.get(i - 1).toCharArray()[j]);
+//                        final DefaultWeightedEdge defaultWeightedEdge1 = directedGraph.addEdge((i - 1) + "," + j + "," + day18.get(i - 1).toCharArray()[j], i + "," + j + "," + chars[j]);
+//                        directedGraph.setEdgeWeight(defaultWeightedEdge, 1);
+//                        directedGraph.setEdgeWeight(defaultWeightedEdge1, 1);
                     }
                     if (i < day18.size() - 1 && day18.get(i + 1).toCharArray()[j] != '#') {
-                        if (!directedGraph.containsVertex((i + 1) + "" + j + "" + day18.get(i + 1).toCharArray()[j])) {
-                            directedGraph.addVertex((i + 1) + "" + j + "" + day18.get(i + 1).toCharArray()[j]);
+                        if (!directedGraph.containsVertex((i + 1) + "," + j + "," + day18.get(i + 1).toCharArray()[j])) {
+                            directedGraph.addVertex((i + 1) + "," + j + "," + day18.get(i + 1).toCharArray()[j]);
                         }
-                        directedGraph.addEdge(i + "" + j + "" + chars[j], (i + 1) + "" + j + "" + day18.get(i + 1).toCharArray()[j]);
+                        final DefaultWeightedEdge defaultWeightedEdge = directedGraph.addEdge(i + "," + j + "," + chars[j], (i + 1) + "," + j + "," + day18.get(i + 1).toCharArray()[j]);
+//                        final DefaultWeightedEdge defaultWeightedEdge1 = directedGraph.addEdge((i + 1) + "," + j + "," + day18.get(i + 1).toCharArray()[j], i + "," + j + "," + chars[j]);
+//                        directedGraph.setEdgeWeight(defaultWeightedEdge, 1);
+//                        directedGraph.setEdgeWeight(defaultWeightedEdge1, 1);
                     }
                 }
             }
         }
 
         final Set<String> vertices = directedGraph.vertexSet();
-        di = new DijkstraShortestPath<>(directedGraph);
 
-        final List<String> gates = getGates(new ArrayList<>(vertices));
-        final List<String> knownKeys = getKeys(new ArrayList<>(vertices));
+        final List<String> keys = knownKeys.stream()
+                .map(s -> s.charAt(0))
+                .map(s -> findVertex(vertices, s))
+                .collect(Collectors.toList());
 
-        gates.forEach(System.out::println);
-        System.out.println("====");
-        Set<String> keys = new HashSet<>();
-//        go(keys, vertices, "36@", 'F');
-        String start = "48@";
-        char target = 'p';
-        int weight = 0;
-        while (true) {
-            System.out.println("traveling to : " + findVertex(vertices, target) + " from: " + start);
-            final GraphPath<String, DefaultEdge> path = di.getPath(start, findVertex(vertices, target));
-            final List<String> vertexList = path.getVertexList();
-            boolean lockedDoor = false;
-            char nextDoor;
-            for (int i = 0; i < vertexList.size(); i++) {
-                final String v = vertexList.get(i);
-                if (v.matches(".*[A-Z]")) {
-                    nextDoor = v.charAt(v.length() - 1);
-                    if (!keys.contains(String.valueOf(Character.toUpperCase(nextDoor)))) {
-                        lockedDoor = true;
-                        target = Character.toLowerCase(nextDoor);
-                        System.out.println("door is locked: " + nextDoor + " going for key: " + target);
-                        break;
+        final List<String> doors = knownKeys.stream()
+                .map(s -> s.charAt(0))
+                .map(Character::toUpperCase)
+                .map(s -> findVertex(vertices, s))
+                .collect(Collectors.toList());
+
+        String start = "40,40,@";
+
+        final DijkstraShortestPath<String, DefaultWeightedEdge> di = new DijkstraShortestPath<>(directedGraph);
+
+        doors.addAll(keys);
+        doors.add(start);
+
+        for (String door : doors) {
+            if (start.equals(door)) continue;
+            final GraphPath<String, DefaultWeightedEdge> path = di.getPath(start, door);
+            final long length = path.getVertexList().stream()
+                    .filter(s -> !s.endsWith("."))
+                    .count();
+            if (length == 2) {
+                final double weight = path.getWeight();
+                final DefaultWeightedEdge defaultWeightedEdge = directedGraph.addEdge(start, door);
+                directedGraph.setEdgeWeight(defaultWeightedEdge, weight);
+            }
+        }
+
+        for (String s : doors) {
+            for (String door : doors) {
+                if (s.equals(door)) continue;
+                final GraphPath<String, DefaultWeightedEdge> path = di.getPath(s, door);
+                final long length = path.getVertexList().stream()
+                        .filter(st -> !st.endsWith("."))
+                        .count();
+                if (length == 2) {
+                    final double weight = path.getWeight();
+                    final DefaultWeightedEdge defaultWeightedEdge = directedGraph.addEdge(s, door);
+                    if (defaultWeightedEdge != null) {
+                        directedGraph.setEdgeWeight(defaultWeightedEdge, weight);
                     }
                 }
+//                final DefaultWeightedEdge defaultWeightedEdge1 = directedGraph.addEdge(s, door);
+//                directedGraph.setEdgeWeight(defaultWeightedEdge1, di.getPath(s, door).getWeight());
             }
-
-            if (!lockedDoor) {
-                start = findVertex(vertices, target);
-                target = findLowHangingFruit(knownKeys, vertices, keys, start).charAt(0);
-                weight += path.getWeight() - 1;
-                System.out.println("everyhing was unlocked: " + path.getWeight());
-                final List<String> collectedKeysOnTheWay = path.getVertexList().stream()
-                        .filter(s -> s.matches(".*[a-z]"))
-                        .map(s -> String.valueOf(s.charAt(s.length() - 1)))
-                        .map(s -> Character.toUpperCase(s.charAt(0)) + "")
-                        .collect(Collectors.toList());
-                collectedKeysOnTheWay.forEach(s -> System.out.println("collected key: " + s));
-                keys.addAll(collectedKeysOnTheWay);
-                knownKeys.removeAll(collectedKeysOnTheWay);
-                if (knownKeys.isEmpty()) {
-                    break;
-                }
-                System.out.println("going next door: " + target);
-            } else {
-                final GraphPath<String, DefaultEdge> move = di.getPath(start, findVertex(vertices, target));
-                final List<String> collectedKeysOnTheWay = move.getVertexList().stream()
-                        .filter(s -> s.matches(".*[a-z]"))
-                        .map(s -> String.valueOf(s.charAt(s.length() - 1)))
-                        .map(s -> Character.toUpperCase(s.charAt(0)) + "")
-                        .collect(Collectors.toList());
-                collectedKeysOnTheWay.forEach(s -> System.out.println("collected key: " + s));
-                keys.addAll(collectedKeysOnTheWay);
-                knownKeys.removeAll(collectedKeysOnTheWay);
-                weight += move.getWeight() - 1;
-                final Character nextObjective = findLowHangingFruit(knownKeys, vertices, keys, start).charAt(0);
-                System.out.println("traveled to: " + findVertex(vertices, target) + " weight: " + move.getWeight() + " next target: " + nextObjective);
-                start = findVertex(vertices, target);
-                if (nextObjective == null) {
-                    break;
-                } else {
-                    target = nextObjective;
-                }
-
-            }
-            System.out.println(weight);
         }
+
+        directedGraph.vertexSet().stream()
+                .filter(s -> s.endsWith("."))
+                .collect(Collectors.toList())
+                .forEach(s -> {
+                    final Set<DefaultWeightedEdge> defaultWeightedEdges = directedGraph.edgesOf(s);
+                    directedGraph.removeAllEdges(defaultWeightedEdges);
+                    directedGraph.removeVertex(s);
+                });
+
+        return directedGraph;
     }
 
-    static Character getNextObjective(List<String> vertices, char current) {
-        return vertices.stream()
-                .map(s -> s.charAt(s.length() - 1))
-                .distinct()
-                .filter(character -> character > Character.toLowerCase(current))
-                .min((o1, o2) -> o1 < o2 ? -1 : 1)
-                .orElse(null);
-    }
-
-    static String findLowHangingFruit(List<String> remainingKeys, Set<String> vertices, Set<String> keys, String pos) {
-        String next = "";
-        double weight = Integer.MAX_VALUE;
-        for (String remainingKey : remainingKeys) {
-            try {
-                final GraphPath<String, DefaultEdge> graph = di.getPath(pos, findVertex(vertices, remainingKey.charAt(0)));
-                if (graph.getWeight() < weight) {
-                    final List<String> keysToTheDoorsInTheWay = graph.getVertexList().stream()
-                            .filter(s -> s.matches(".*[A-Z]"))
-                            .map(s -> s.charAt(s.length() - 1))
-                            .map(String::valueOf)
-                            .map(String::toLowerCase)
-                            .collect(Collectors.toList());
-                    if (keys.containsAll(keysToTheDoorsInTheWay)) {
-                        weight = graph.getWeight();
-                        next = remainingKey;
-                    }
-                }
-            } catch (Exception e) {
-
-            }
-
-        }
-        if (next.equals("")) return "p";
-        return next;
-    }
-
-    static String go(Set<String> keys, Set<String> vertices, String current, char t) {
-        final String target = findVertex(vertices, t);
-        System.out.println("current: " + current + " target: " + target);
-        final GraphPath<String, DefaultEdge> path = di.getPath(current, target);
-        final List<String> gates = getGates(path.getVertexList());
-        gates.removeAll(keys);
-        if (gates.isEmpty()) {
-            current = findVertex(vertices, t);
-        } else {
-            gates.sort((o1, o2) -> o1.charAt(0) < o2.charAt(0) ? -1 : 1);
-            final char next = gates.get(0).charAt(0);
-            System.out.println(next);
-            current = go(keys, vertices, current, Character.toLowerCase(next));
-            keys.add(String.valueOf(Character.toUpperCase(t)));
-        }
-        return current;
-    }
 
     static String findVertex(Set<String> vertices, char c) {
         for (String vertex : vertices) {
@@ -193,25 +222,5 @@ public class Day18 {
             }
         }
         return null;
-    }
-
-    static List<String> getGates(List<String> edgeList) {
-        final ArrayList<String> gates = new ArrayList<>();
-        edgeList.forEach(s -> {
-            if (s.matches(".*[A-Z]")) {
-                gates.add(String.valueOf(s.charAt(s.length() - 1)));
-            }
-        });
-        return gates;
-    }
-
-    static List<String> getKeys(List<String> edgeList) {
-        final ArrayList<String> gates = new ArrayList<>();
-        edgeList.forEach(s -> {
-            if (s.matches(".*[a-z]")) {
-                gates.add(String.valueOf(s.charAt(s.length() - 1)));
-            }
-        });
-        return gates;
     }
 }
