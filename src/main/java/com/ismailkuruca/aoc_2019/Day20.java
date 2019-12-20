@@ -9,66 +9,76 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 public class Day20 {
 
+    static List<String> day20 = FileUtil.readFile("day20");
+
+
     public static void main(String[] args) throws IOException {
 
-        List<String> day20 = FileUtil.readFile("day20");
-
-        final DijkstraShortestPath<String, DefaultWeightedEdge> di = new DijkstraShortestPath<>(graph(day20));
-        final GraphPath<String, DefaultWeightedEdge> path = di.getPath("33,102,.", "108,53,.");
-        System.out.println(path.getWeight());
-
+        part1();
+        part2();
     }
 
-    private static DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph(List<String> day20) {
-        DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> directedGraph
-                = new DefaultDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
-        for (int i = 0; i < day20.size(); i++) {
-            final String s = day20.get(i);
-            final char[] chars = s.toCharArray();
-            for (int j = 0; j < chars.length; j++) {
-                if (chars[j] == '.') {
-                    if (!directedGraph.containsVertex(i + "," + j + "," + chars[j])) {
-                        directedGraph.addVertex(i + "," + j + "," + chars[j]);
-                    }
-                    if (j > 0 && chars[j - 1] == '.') {
-                        if (!directedGraph.containsVertex(i + "," + (j - 1) + "," + chars[j - 1])) {
-                            directedGraph.addVertex(i + "," + (j - 1) + "," + chars[j - 1]);
-                        }
-                        directedGraph.addEdge(i + "," + j + "," + chars[j], i + "," + (j - 1) + "," + chars[j - 1]);
-                    }
-                    if (j < chars.length - 1 && chars[j + 1] == '.') {
-                        if (!directedGraph.containsVertex(i + "," + (j + 1) + "," + chars[j + 1])) {
-                            directedGraph.addVertex(i + "," + (j + 1) + "," + chars[j + 1]);
-                        }
-                        directedGraph.addEdge(i + "," + j + "," + chars[j], i + "," + (j + 1) + "," + chars[j + 1]);
-                    }
-                    if (i > 0 && day20.get(i - 1).toCharArray()[j] == '.') {
-                        if (!directedGraph.containsVertex((i - 1) + "," + j + "," + day20.get(i - 1).toCharArray()[j])) {
-                            directedGraph.addVertex((i - 1) + "," + j + "," + day20.get(i - 1).toCharArray()[j]);
-                        }
-                        directedGraph.addEdge(i + "," + j + "," + chars[j], (i - 1) + "," + j + "," + day20.get(i - 1).toCharArray()[j]);
-                    }
-                    if (i < day20.size() - 1 && day20.get(i + 1).toCharArray()[j] == '.') {
-                        if (!directedGraph.containsVertex((i + 1) + "," + j + "," + day20.get(i + 1).toCharArray()[j])) {
-                            directedGraph.addVertex((i + 1) + "," + j + "," + day20.get(i + 1).toCharArray()[j]);
-                        }
-                        directedGraph.addEdge(i + "," + j + "," + chars[j], (i + 1) + "," + j + "," + day20.get(i + 1).toCharArray()[j]);
-                    }
-                }
-            }
+    private static void part2() {
+        int depth = 100;
+
+        final DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph = graph(day20, depth);
+        HashMap<String, String> portals = new HashMap<>();
+        //outer, inner
+        portals.put("0,35", "45,76");
+        portals.put("0,41", "82,47");
+        portals.put("0,45", "82,49");
+        portals.put("0,57", "26,31");
+        portals.put("0,63", "49,76");
+        portals.put("0,65", "63,76");
+        portals.put("57,0", "82,69");
+        portals.put("37,0", "43,26");
+        portals.put("43,0", "82,51");
+        portals.put("79,0", "69,76");
+        portals.put("45,0", "26,67");
+        portals.put("73,0", "49,26");
+        portals.put("67,0", "59,26");
+        portals.put("59,102", "26,51");
+        portals.put("31,102", "39,76");
+        portals.put("69,102", "63,26");
+        portals.put("73,102", "71,26");
+        portals.put("39,102", "82,43");
+        portals.put("47,102", "82,65");
+        portals.put("53,102", "35,76");
+        portals.put("108,35", "26,37");
+        portals.put("108,47", "26,53");
+        portals.put("108,49", "26,63");
+        portals.put("108,39", "82,33");
+        portals.put("108,57", "73,76");
+        portals.put("108,69", "37,26");
+        portals.put("108,61", "77,26");
+
+
+        for (int i = 1; i < depth; i++) {
+            int finalI = i;
+            portals.forEach((outer, inner) -> {
+                graph.addEdge(finalI + "," + outer + ",.", (finalI - 1) + "," + inner + ",.");
+                graph.addEdge((finalI - 1) + "," + inner + ",.", finalI + "," + outer + ",.");
+
+            });
         }
 
+//        39, 102 > 108, 53 ?
+
+        final DijkstraShortestPath<String, DefaultWeightedEdge> di = new DijkstraShortestPath<>(graph);
+
+        final GraphPath<String, DefaultWeightedEdge> path = di.getPath("0,33,102,.", "0,108,53,.");
+        System.out.println(path.getWeight());
+    }
+
+
+    private static void part1() {
+        final DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph = graph(day20, 1);
+
         HashMap<String, String> portals = new HashMap<>();
-//        portals.put("6,0", "4,7");
-//        portals.put("11,0", "8,4");
-//        portals.put("13,0", "10,9");
-
-
         portals.put("0,35", "45,76");
         portals.put("0,41", "82,47");
         portals.put("0,45", "82,49");
@@ -100,49 +110,58 @@ public class Day20 {
 //        39, 102 > 108, 53 ?
 
         portals.forEach((s, s2) -> {
-//            final String[] split1 = s.split(",");
-//            final String[] split2 = s2.split(",");
-//            String sx = (Integer.parseInt(split1[0]) + 1) + "," + (Integer.parseInt(split1[1]) + 1);
-//            String s2x = (Integer.parseInt(split2[0]) + 1) + "," + (Integer.parseInt(split2[1]) + 1);
-            final DefaultWeightedEdge defaultWeightedEdge = directedGraph.addEdge(s + ",.", s2 + ",.");
-            final DefaultWeightedEdge defaultWeightedEdge1 = directedGraph.addEdge(s2 + ",.", s + ",.");
-
+            graph.addEdge(0 + "," + s + ",.", 0 + "," + s2 + ",.");
+            graph.addEdge(0 + "," + s2 + ",.", 0 + "," + s + ",.");
         });
 
-//        for (int i = 0; i < day20.size(); i++) {
-//            final String s = day20.get(i);
-//            final char[] chars = s.toCharArray();
-//            for (int j = 0; j < chars.length; j++) {
-//                if (Character.isLetter(chars[j])) {
-//                    String portal = String.valueOf(chars[j]);
-//                    if (j > 0 && Character.isLetter(chars[j - 1])) {
-//                        portal += String.valueOf(chars[j - 1]);
-//                    }
-//                    if (j < chars.length - 1 && Character.isLetter(chars[j + 1])) {
-//                        portal += String.valueOf(chars[j + 1]);
-//                    }
-//                    if (i > 0 && Character.isLetter(day20.get(i - 1).toCharArray()[j])) {
-//                        portal += String.valueOf(day20.get(i - 1).toCharArray()[j]);
-//                    }
-//                    if (i < day20.size() - 1 && Character.isLetter(day20.get(i + 1).toCharArray()[j])) {
-//                        portal += String.valueOf(day20.get(i + 1).toCharArray()[j]);
-//                    }
-//
-//                }
-//            }
-//        }
+        final DijkstraShortestPath<String, DefaultWeightedEdge> di = new DijkstraShortestPath<>(graph);
 
-
-        return directedGraph;
+        final GraphPath<String, DefaultWeightedEdge> path = di.getPath("0,33,102,.", "0,108,53,.");
+        System.out.println(path.getWeight());
     }
 
+    private static DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> graph(List<String> day20, int depth) {
+        DefaultDirectedWeightedGraph<String, DefaultWeightedEdge> directedGraph
+                = new DefaultDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
-    static String findVertex(Set<String> vertices, char c) {
-        for (String vertex : vertices) {
-            if (vertex.endsWith(String.valueOf(c))) {
-                return vertex;
+        for (int r = 0; r < depth; r++) {
+            for (int i = 0; i < day20.size(); i++) {
+                final String s = day20.get(i);
+                final char[] chars = s.toCharArray();
+                for (int j = 0; j < chars.length; j++) {
+                    if (chars[j] == '.') {
+                        if (!directedGraph.containsVertex(r + "," + i + "," + j + "," + chars[j])) {
+                            directedGraph.addVertex(r + "," + i + "," + j + "," + chars[j]);
+                        }
+                        if (j > 0 && chars[j - 1] == '.') {
+                            if (!directedGraph.containsVertex(r + "," + i + "," + (j - 1) + "," + chars[j - 1])) {
+                                directedGraph.addVertex(r + "," + i + "," + (j - 1) + "," + chars[j - 1]);
+                            }
+                            directedGraph.addEdge(r + "," + i + "," + j + "," + chars[j], r + "," + i + "," + (j - 1) + "," + chars[j - 1]);
+                        }
+                        if (j < chars.length - 1 && chars[j + 1] == '.') {
+                            if (!directedGraph.containsVertex(r + "," + i + "," + (j + 1) + "," + chars[j + 1])) {
+                                directedGraph.addVertex(r + "," + i + "," + (j + 1) + "," + chars[j + 1]);
+                            }
+                            directedGraph.addEdge(r + "," + i + "," + j + "," + chars[j], r + "," + i + "," + (j + 1) + "," + chars[j + 1]);
+                        }
+                        if (i > 0 && day20.get(i - 1).toCharArray()[j] == '.') {
+                            if (!directedGraph.containsVertex(r + "," + (i - 1) + "," + j + "," + day20.get(i - 1).toCharArray()[j])) {
+                                directedGraph.addVertex(r + "," + (i - 1) + "," + j + "," + day20.get(i - 1).toCharArray()[j]);
+                            }
+                            directedGraph.addEdge(r + "," + i + "," + j + "," + chars[j], r + "," + (i - 1) + "," + j + "," + day20.get(i - 1).toCharArray()[j]);
+                        }
+                        if (i < day20.size() - 1 && day20.get(i + 1).toCharArray()[j] == '.') {
+                            if (!directedGraph.containsVertex(r + "," + (i + 1) + "," + j + "," + day20.get(i + 1).toCharArray()[j])) {
+                                directedGraph.addVertex(r + "," + (i + 1) + "," + j + "," + day20.get(i + 1).toCharArray()[j]);
+                            }
+                            directedGraph.addEdge(r + "," + i + "," + j + "," + chars[j], r + "," + (i + 1) + "," + j + "," + day20.get(i + 1).toCharArray()[j]);
+                        }
+                    }
+                }
             }
         }
-        return null;
+
+        return directedGraph;
     }
 }
