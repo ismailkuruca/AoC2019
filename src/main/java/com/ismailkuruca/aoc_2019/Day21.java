@@ -7,10 +7,11 @@ import java.util.stream.Collectors;
 
 public class Day21 {
     public static void main(String[] args) {
+        part1();
         part2();
     }
 
-    private static void part2() {
+    private static void part1() {
         final List<String> day21 =
                 FileUtil.readFile("day21");
         final List<String> day21Values = Arrays.asList(day21.get(0).split(","));
@@ -27,12 +28,6 @@ public class Day21 {
                 "NOT C T\n",
                 "OR T J\n",
                 "AND D J\n",
-//                "NOT A J\n",
-//                "NOT B T\n",
-//                "AND T J\n",
-//                "NOT C T\n",
-//                "AND T J\n",
-//                "AND D J\n",
                 "WALK\n");
 
         List<Long> code = new ArrayList<>();
@@ -43,15 +38,39 @@ public class Day21 {
         final List<Long> run = intCodeMachine21.run();
     }
 
-}
+    private static void part2() {
+        final List<String> day21 =
+                FileUtil.readFile("day21");
+        final List<String> day21Values = Arrays.asList(day21.get(0).split(","));
 
-class SpringDroid {
-    boolean oneTile = false;
-    boolean twotile = false;
-    boolean threeTile = false;
-    boolean fourTile = false;
-    boolean temporary = false;
-    boolean jump = false;
+        final List<Long> input = day21Values.stream()
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+
+        final IntCodeMachine21 intCodeMachine21 = new IntCodeMachine21(input);
+        List<String> springScript = Arrays.asList(
+                "NOT I T\n",
+                "NOT T J\n",
+                "OR F J\n",
+                "AND E J\n",
+                "OR H J\n",
+                "AND D J\n",
+                "NOT A T\n",
+                "NOT T T\n",
+                "AND B T\n",
+                "AND C T\n",
+                "NOT T T\n",
+                "AND T J\n",
+                "RUN\n");
+
+        List<Long> code = new ArrayList<>();
+        springScript.stream()
+                .map(s -> s.chars().mapToObj(Long::new).collect(Collectors.toList()))
+                .forEach(code::addAll);
+        intCodeMachine21.input = code;
+        final List<Long> run = intCodeMachine21.run();
+    }
+
 }
 
 class IntCodeMachine21 {
